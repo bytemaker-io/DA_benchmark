@@ -2,21 +2,23 @@ package ecdsa
 
 import (
 	"crypto/ecdsa"
-	"crypto/elliptic"
 	"crypto/rand"
 	"fmt"
 	"math/big"
 	"strconv"
 	"time"
+
+	"github.com/btcsuite/btcd/btcec"
 )
 
 func EcdsaBenchMark() {
-	curve := elliptic.P256()
-	const num = 100000
+	curve := btcec.S256()
+	const num = 10000
 	// 生成一万个私钥ecdsa签名私钥
 	var privateKeySlice []*ecdsa.PrivateKey = make([]*ecdsa.PrivateKey, num, num)
 
 	// 生成一万个私钥
+	start := time.Now() // 获取当前时间
 	for i := 0; i < num; i++ {
 		// 生成私钥
 		privateKey, err := ecdsa.GenerateKey(curve, rand.Reader)
@@ -25,11 +27,13 @@ func EcdsaBenchMark() {
 		}
 		privateKeySlice[i] = privateKey
 	}
+	elapsed := time.Now().Sub(start)
+	fmt.Println("创建"+strconv.Itoa(num)+"个私钥耗时：", elapsed)
 
 	var rSlice []*big.Int = make([]*big.Int, num, num)
 	var sSlice []*big.Int = make([]*big.Int, num, num)
 	// 生成一万个签名
-	start := time.Now() // 获取当前时间
+	start = time.Now() // 获取当前时间
 	for i := 0; i < num; i++ {
 		// 生成签名
 		r, s, err := ecdsa.Sign(rand.Reader, privateKeySlice[i], []byte("hello world"))
@@ -40,7 +44,7 @@ func EcdsaBenchMark() {
 		rSlice[i] = r
 		sSlice[i] = s
 	}
-	elapsed := time.Now().Sub(start)
+	elapsed = time.Now().Sub(start)
 	fmt.Println("生成"+strconv.Itoa(num)+"个签名完成耗时：", elapsed)
 
 	//验证一万个签名
